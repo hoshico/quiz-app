@@ -4,6 +4,8 @@ import { Layout } from "./components/layout";
 import { NicknameForm } from "./components/NicknameForm";
 import { QuizPage } from "./components/QuizPage";
 import { AnswerResult } from "./components/AnswerResult";
+import { AdminQuestionPage } from "./components/AdminQuestionPage";
+import { UserList } from "./components/UserList";
 
 type Env = {
   Bindings: {
@@ -14,6 +16,85 @@ type Env = {
 const app = new Hono<Env>();
 
 app.use("*", jsxRenderer());
+
+// 管理画面 - 一覧表示 & 作成フォーム
+app.get("/admin/questions", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    "SELECT * FROM questions ORDER BY id"
+  ).all();
+
+  return c.render(
+    <Layout>
+      <AdminQuestionPage questions={results} />
+    </Layout>
+  );
+});
+
+// 問題新規作成
+app.post("/admin/questions", async (c) => {
+  const body = await c.req.parseBody();
+  const question = body.question?.toString();
+  const options = [body.option1, body.option2, body.option3, body.option4].map(
+    (o) => o?.toString()
+  );
+  const correctAnswer = body.correct_answer?.toString();
+
+  if (!question || !correctAnswer || options.some((o) => !o)) {
+    return c.text("全てのフィールドを入力してください", 400);
+  }
+
+  // 既存の問題数を数えてIDを生成
+  const { results } = await c.env.DB.prepare(
+    "SELECT COUNT(*) as count FROM questions"
+  ).all();
+  const count = results[0].count as number;
+  const id = `q${count + 1}`; // 例: q4, q5, ...
+
+  await c.env.DB.prepare(
+    "INSERT INTO questions (id, question, options, correct_answer) VALUES (?1, ?2, ?3, ?4)"
+  )
+    .bind(id, question, JSON.stringify(options), correctAnswer)
+    .run();
+
+  return c.redirect("/admin/questions");
+});
+
+// ユーザー確認画面
+app.get("/admin/users", async (c) => {
+  const { results } = (await c.env.DB.prepare(
+    "SELECT * FROM users ORDER BY created_at DESC"
+  ).all()) as {
+    results: { id: string; nickname: string; created_at: string }[];
+  };
+
+  return c.render(
+    <Layout>
+      <UserList users={results} />
+    </Layout>
+  );
+});
+
+app.post("/admin/users/delete/:id", async (c) => {
+  const id = c.req.param("id");
+
+  await c.env.DB.prepare("DELETE FROM users WHERE id = ?1").bind(id).run();
+
+  return c.redirect("/admin/users");
+});
+
+app.post("/admin/users/delete-all", async (c) => {
+  await c.env.DB.prepare("DELETE FROM users").run();
+  return c.redirect("/admin/users");
+});
+
+// 問題削除
+app.post("/admin/questions/delete/:id", async (c) => {
+  const id = c.req.param("id");
+
+  await c.env.DB.prepare("DELETE FROM questions WHERE id = ?1").bind(id).run();
+
+  return c.redirect("/admin/questions");
+});
 
 app.get("/", (c) => c.redirect("/register"));
 
