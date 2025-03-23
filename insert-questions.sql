@@ -13,7 +13,7 @@ INSERT INTO questions (id, question, options, correct_answer) VALUES
   ),
   (
     'q3',
-    '2 + 2 は？',
-    '["3", "4", "5", "6"]',
-    '4'
+    'ベトナムの首都は？',
+    '["ハノイ", "ホーチミン", "ダナン", "フエ"]',
+    'ハノイ'
   );
