@@ -1,12 +1,17 @@
 import { FC } from "hono/jsx";
 
 export const UserList: FC<{
-  users: { id: string; nickname: string; created_at: string }[];
+  users: {
+    id: string;
+    nickname: string;
+    created_at: string;
+    total_answers: number;
+    correct_answers: number;
+  }[];
 }> = ({ users }) => (
   <>
     <h1 className="text-2xl font-bold mb-4">登録ユーザー一覧</h1>
 
-    {/* 一括削除ボタン */}
     {users.length > 0 && (
       <form
         method="post"
@@ -26,7 +31,8 @@ export const UserList: FC<{
           <div className="flex justify-between items-center">
             <div>
               <p>
-                <strong>{u.nickname}</strong>
+                <strong>{u.nickname}</strong>（{u.correct_answers ?? 0} /{" "}
+                {u.total_answers ?? 0} 正解）
               </p>
               <p className="text-sm text-gray-500">
                 登録日時: {new Date(u.created_at).toLocaleString()}

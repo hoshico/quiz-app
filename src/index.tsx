@@ -62,9 +62,26 @@ app.post("/admin/questions", async (c) => {
 // ユーザー確認画面
 app.get("/admin/users", async (c) => {
   const { results } = (await c.env.DB.prepare(
-    "SELECT * FROM users ORDER BY created_at DESC"
+    `
+    SELECT
+      u.id,
+      u.nickname,
+      u.created_at,
+      COUNT(a.id) as total_answers,
+      SUM(CASE WHEN a.is_correct THEN 1 ELSE 0 END) as correct_answers
+    FROM users u
+    LEFT JOIN answers a ON u.id = a.user_id
+    GROUP BY u.id
+    ORDER BY u.created_at DESC
+  `
   ).all()) as {
-    results: { id: string; nickname: string; created_at: string }[];
+    results: {
+      id: string;
+      nickname: string;
+      created_at: string;
+      total_answers: number;
+      correct_answers: number;
+    }[];
   };
 
   return c.render(
@@ -83,7 +100,12 @@ app.post("/admin/users/delete/:id", async (c) => {
 });
 
 app.post("/admin/users/delete-all", async (c) => {
-  await c.env.DB.prepare("DELETE FROM users").run();
+  const deleteAnswers = await c.env.DB.prepare("DELETE FROM answers");
+  const deleteUsers = await c.env.DB.prepare("DELETE FROM users");
+
+  await deleteAnswers.run();
+  await deleteUsers.run();
+
   return c.redirect("/admin/users");
 });
 
