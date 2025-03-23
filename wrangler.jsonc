@@ -1,8 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "quiz-app",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-03-23"
+  "main": "src/index.tsx",
+  "compatibility_date": "2025-03-23",
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
@@ -21,13 +21,13 @@
   //     "bucket_name": "my-bucket"
   //   }
   // ],
-  // "d1_databases": [
-  //   {
-  //     "binding": "MY_DB",
-  //     "database_name": "my-database",
-  //     "database_id": ""
-  //   }
-  // ],
+ "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "quiz-db",
+      "database_id": "82e731ee-7ad5-4522-8f6f-4b68766439c2"
+    }
+  ]
   // "ai": {
   //   "binding": "AI"
   // },
